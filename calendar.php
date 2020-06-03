@@ -12,14 +12,20 @@
 	$event_data = mysqli_query($dbc, $query);
 	if (mysqli_num_rows($event_data)) {
 		$event_list = '';
-		// リストボックスに表示するイベント情報を詰めた配列を作成
+		$event_img_path = array();
+		$i = 1;
+		// リストボックスに表示するイベント情報を詰めた変数と、画像のパスを詰めた配列を作成を作成
 		foreach($event_data as $data) {
-			$event_list .= "<option value=event'" . $data['event_id'] . "'>" . $data['event_name'] . "</option>";
+			$event_list .= "<option value=event" . $data['event_id'] . ">" . $data['event_name'] . "</option>";
+			$event_img_path[$i] = $data['event_img_path'];
+			$i++;
 		}
 	}
 	else {
 		die('内部エラー：イベントテーブルの読み出しに失敗しました。');
 	}
+	
+	$is_display_calendar = TRUE;
 	
 	// ログインしている場合のみ情報表示
 	if (isset($_SESSION['user_id'])) {
@@ -52,104 +58,138 @@
 			$now_day = date("j"); // 現在の日を取得
 		}
 		
-		// カレンダー作成(参考：https://php-beginner.com/sample/date_time/calendar2.html)
-		$weekday = array("日","月","火","水","木","金","土"); //曜日の配列作成
-		// 1日の曜日を数値で取得
-		$fir_weekday = date( "w", mktime( 0, 0, 0, $now_month, 1, $now_year ) );
-		$before_month = $now_month - 1;
-		$after_month = $now_month + 1;
+		// 追加クリック時
+		if ( isset($_POST['submit']) && isset($_POST['date']) ) {
+			$date = $_POST['date'];
+			// event_tableのevent_idを取得
+			$event_id = $_POST['event'];
+			$event_id = str_replace('event', '', $event_id);
+			$event_id = str_replace('\'', '', $event_id);
 
-		$table = '<table border="1" style="text-align:center;">';
-		// カレンダーのキャプションに年月を表示
-		$table .= '<caption><a href="' . $_SERVER['PHP_SELF'] . '?year=' . $now_year . '&amp;month=' . $before_month . '">＜</a>　' . $now_year . "年" . $now_month . "月　" . 
-					'<a href="' . $_SERVER['PHP_SELF'] . '?year=' . $now_year . '&amp;month=' . $after_month . '">＞</a></caption><br />';
-		
-		$table .= '<tr>';
-
-		// 曜日セル<th>タグ設定
-		$i = 0;
-		while ($i <= 6) {
-		    if( $i == 0 ){ // 日曜日の文字色
-		        $style = "#C30";
-		    }
-		    else if( $i == 6 ){ // 土曜日の文字色
-		        $style = "#03C";
-		    }
-		    else{ // 月曜～金曜日の文字色
-		        $style = "black";
-		    }
-			$table .= "<th style=\"color:" . $style . "\">" . $weekday[$i] . "</th>";
-			$i++;
+			// event_idからevent_img_pathを取得し画像を取得する
+			$img_path = $event_img_path[$event_id];
+			
+			// calendar_tableにイベントを追加する
+			$query = "INSERT INTO calendar_table (date, event_id, user_id) VALUES ('$date', '$event_id', '$user_id')";
+			$result = mysqli_query($dbc, $query)
+				or die('内部エラー：calendar_tableへのINSERTに失敗しました。');
+				
+			echo '<p>追加しました</p>';
+			echo '<a href="' . $_SERVER['PHP_SELF'] . '">カレンダー画面に戻る</a>';
+			$is_display_calendar = FALSE;
 		}
-		
-		$table .= '</tr><br /><tr>';
-
-		$i = 0;
-		while ( $i != $fir_weekday) { //１日の曜日まで空白（&nbsp;）で埋める
-			$table .= '<td>&nbsp;</td><br />';
-			$i++;
+		else if ( isset($_POST['delete']) && isset($_POST['date']) ) {	// 削除クリック時
+			$date = $_POST['date'];
+			// calendar_tableから日付に一致した情報を削除する
+			$query = "DELETE FROM calendar_table WHERE date = '$date' AND user_id = $user_id LIMIT 1";
+			$result = mysqli_query($dbc, $query)
+				or die('内部エラー：calendar_tableのDELETEに失敗しました。');
+				
+			echo '<p>削除しました</p>';
+			echo '<a href="' . $_SERVER['PHP_SELF'] . '">カレンダー画面に戻る</a>';
+			$is_display_calendar = FALSE;
 		}
 
-		// カレンダーの日付を詰めた配列を作成
-		for ($day = 1; checkdate( $now_month, $day, $now_year ); $day++) {
-
-		    //曜日の最後まできたらカウント値（曜日カウンター）を戻して行を変える
-		    if( $i > 6 ){
-		        $i = 0;
-		        $table .=  "</tr>";
-		        $table .=  "<tr>";
-		    }
-		 
-		//-------------スタイルシート設定-----------------------------------
-		    if( $i == 0 ){ //日曜日の文字色
-		        $style = "#C30";
-		    }
-		    else if( $i == 6 ){ //土曜日の文字色
-		        $style = "#03C";
-		    }
-		    else{ //月曜～金曜日の文字色
-		        $style = "black";
-		    }
-		 
-		    // 今日の日付の場合、背景色追加
-		    if( $day == $now_day ){
-		        $style .= "; background:silver";
-		    }
-		//-------------スタイルシート設定終わり-----------------------------
-		 
-		    // 日付セル作成とスタイルシートの挿入
-		    $table .=  "<td style=\"color:" . $style . ";\">" . $day . "</td>";
-		 
-		    $i++; //カウント値（曜日カウンター）+1
-		}
-		$table .= '</tr></table>';
 		
-		
-		
+		// 追加や削除以外の場合のみカレンダーを表示する
+		if ($is_display_calendar) {
+			// カレンダー作成(参考：https://php-beginner.com/sample/date_time/calendar2.html)
+			$weekday = array("日","月","火","水","木","金","土"); //曜日の配列作成
+			// 1日の曜日を数値で取得
+			$fir_weekday = date( "w", mktime( 0, 0, 0, $now_month, 1, $now_year ) );
+			$before_month = $now_month - 1;
+			$after_month = $now_month + 1;
 
-$input_date = "2020-06-01";	// 仮
+			$table = '<table border="1" style="text-align:center;">';
+			// カレンダーのキャプションに年月を表示
+			$table .= '<caption><a href="' . $_SERVER['PHP_SELF'] . '?year=' . $now_year . '&amp;month=' . $before_month . '">＜</a>　' . $now_year . "年" . $now_month . "月　" . 
+						'<a href="' . $_SERVER['PHP_SELF'] . '?year=' . $now_year . '&amp;month=' . $after_month . '">＞</a></caption><br />';
+			
+			$table .= '<tr>';
 
-		// tableの表示
-		echo $table; 
-?>
-		<hr>
-			<p>追加する情報を選択して追加をクリックするか、削除をクリックしてください</p>
-			<form method="post" action="<?php echo $_SERVER['PHP_SELF']; ?>">
-				<label for="date"><?php echo $input_date ?></label><br />
-				<label for="event">イベント：</label>
-				<select name="event" />
-				<?php echo $event_list; ?>
-				</select><br />
-				<input type="submit" value="追加" name="submit" />
-				<input type="submit" value="削除" name="delete" /><br />
-			</form>
+			// 曜日セル<th>タグ設定
+			$i = 0;
+			while ($i <= 6) {
+			    if( $i == 0 ){ // 日曜日の文字色
+			        $style = "#C30";
+			    }
+			    else if( $i == 6 ){ // 土曜日の文字色
+			        $style = "#03C";
+			    }
+			    else{ // 月曜～金曜日の文字色
+			        $style = "black";
+			    }
+				$table .= "<th style=\"color:" . $style . "\">" . $weekday[$i] . "</th>";
+				$i++;
+			}
+			
+			$table .= '</tr><br /><tr>';
+
+			$i = 0;
+			while ( $i != $fir_weekday) { //１日の曜日まで空白（&nbsp;）で埋める
+				$table .= '<td>&nbsp;</td><br />';
+				$i++;
+			}
+
+			// カレンダーの日付を詰めた配列を作成
+			for ($day = 1; checkdate( $now_month, $day, $now_year ); $day++) {
+
+			    //曜日の最後まできたらカウント値（曜日カウンター）を戻して行を変える
+			    if( $i > 6 ){
+			        $i = 0;
+			        $table .=  "</tr>";
+			        $table .=  "<tr>";
+			    }
+			 
+			//-------------スタイルシート設定-----------------------------------
+			    if( $i == 0 ){ //日曜日の文字色
+			        $style = "#C30";
+			    }
+			    else if( $i == 6 ){ //土曜日の文字色
+			        $style = "#03C";
+			    }
+			    else{ //月曜～金曜日の文字色
+			        $style = "black";
+			    }
+			 
+			    // 今日の日付の場合、背景色追加
+			    if( $day == $now_day ){
+			        $style .= "; background:silver";
+			    }
+			//-------------スタイルシート設定終わり-----------------------------
+			 
+			    // 日付セル作成とスタイルシートの挿入
+			    $table .=  "<td style=\"color:" . $style . ";\">" . $day . "</td>";
+			 
+			    $i++; //カウント値（曜日カウンター）+1
+			}
+			$table .= '</tr></table>';
+			// tableの表示
+			echo $table; 
+
+	?>
+			<hr>
+				<p>追加する情報を選択して追加をクリックするか、削除をクリックしてください</p>
+				<form method="post" action="<?php echo $_SERVER['PHP_SELF']; ?>">
+					<input type="date" id="date" name="date" /><br />
+					<label for="event">イベント：</label>
+					<select name="event" />
+					<?php echo $event_list; ?>
+					</select><br />
+					<input type="submit" value="追加" name="submit" />
+					<input type="submit" value="削除" name="delete" /><br />
+				</form>
 
 <hr>
 <?php
+		}
 	}
 	else {	// 未ログインの場合、ログインを促す
 		echo '<p><a href="login.php">ログイン</a>してください。</p>';
 	}
+	
+	// DB close
+	mysqli_close($dbc);
 
 	require_once("footer.php");
 ?>
