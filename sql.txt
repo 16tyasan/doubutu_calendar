@@ -1,0 +1,52 @@
+CREATE TABLE calendar_table (
+  id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
+  date DATE,
+  event_id INT,
+  user_id INT
+);
+
+INSERT INTO kabu_table VALUES(1, '2020-05-24', 'AM', 100, 1, 0);
+INSERT INTO kabu_table VALUES(2, '2020-05-25', 'AM', 74, 0, 0);
+INSERT INTO kabu_table VALUES(3, '2020-05-25', 'PM', 65, 0, 0);
+INSERT INTO kabu_table VALUES(4, '2020-05-26', 'AM', 64, 0, 0);
+INSERT INTO kabu_table VALUES(5, '2020-05-26', 'PM', 54, 0, 0);
+
+CREATE TABLE event_table (
+	event_id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
+	event_name VARCHAR(20),
+	event_img_path VARCHAR(32)
+);
+
+INSERT INTO event_table VALUES(1, 'キャンプサイト訪問者', 'image/camp.jpg');
+INSERT INTO event_table VALUES(2, 'フーコ(大流星群)', 'image/fuko.jpg');
+INSERT INTO event_table VALUES(3, 'ジャスティン', 'image/jastine.jpg');
+INSERT INTO event_table VALUES(4, 'ジョニー', 'image/jony.jpg');
+INSERT INTO event_table VALUES(5, 'ことの', 'image/kotono.jpg');
+INSERT INTO event_table VALUES(6, 'レイジ', 'image/reiji.jpg');
+INSERT INTO event_table VALUES(7, 'レックス', 'image/rex.jpg');
+INSERT INTO event_table VALUES(8, 'ローラン', 'image/roran.jpg');
+INSERT INTO event_table VALUES(9, 'シャンク', 'image/syanku.jpg');
+INSERT INTO event_table VALUES(10, 'とたけけ', 'image/totakeke.png');
+INSERT INTO event_table VALUES(11, 'つねきち', 'image/tunekiti.jpg');
+INSERT INTO event_table VALUES(12, 'うり坊', 'image/uribou.jpg');
+INSERT INTO event_table VALUES(13, 'ゆうたろう', 'image/yuutarou.jpg');
+INSERT INTO event_table VALUES(14, 'つり大会', 'image/turizao.png');
+
+
+
+CREATE TABLE user_table (
+	user_id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
+	user_name VARCHAR(32),
+	password VARCHAR(40)
+);
+
+
+
+
+
+
+
+
+
+ALTER TABLE kabu_table ADD user_id INT NOT NULL;
+UPDATE kabu_table SET user_id = 1;
