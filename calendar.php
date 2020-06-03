@@ -93,6 +93,22 @@
 		
 		// 追加や削除以外の場合のみカレンダーを表示する
 		if ($is_display_calendar) {
+			// calendar_tableから現在の年月の情報のみを取得する
+			$now_year_month = $now_year . '-' . date("m") . '%';
+			$query = "SELECT * FROM calendar_table WHERE date LIKE '$now_year_month' AND user_id = $user_id";
+			$calendar_data = mysqli_query($dbc, $query)
+				or die('内部エラー：calendar_tableのDELETEに失敗しました。');
+
+			$i = 0;
+			foreach($calendar_data as $data) {
+				// 日付を数値で取り出す
+				$event_day = intval(substr($data['date'], -2));
+				// event_idを取り出し、画像へのパスを取得する
+				// 日付をキーとした画像へのパスを格納した配列を作成する
+				$path_arr[$event_day] = $event_img_path[$data['event_id']];
+				$i++;
+			}
+
 			// カレンダー作成(参考：https://php-beginner.com/sample/date_time/calendar2.html)
 			$weekday = array("日","月","火","水","木","金","土"); //曜日の配列作成
 			// 1日の曜日を数値で取得
@@ -103,7 +119,7 @@
 			$table = '<table border="1" style="text-align:center;">';
 			// カレンダーのキャプションに年月を表示
 			$table .= '<caption><a href="' . $_SERVER['PHP_SELF'] . '?year=' . $now_year . '&amp;month=' . $before_month . '">＜</a>　' . $now_year . "年" . $now_month . "月　" . 
-						'<a href="' . $_SERVER['PHP_SELF'] . '?year=' . $now_year . '&amp;month=' . $after_month . '">＞</a></caption><br />';
+						'<a href="' . $_SERVER['PHP_SELF'] . '?year=' . $now_year . '&amp;month=' . $after_month . '">＞</a></caption>';
 			
 			$table .= '<tr>';
 
@@ -123,11 +139,11 @@
 				$i++;
 			}
 			
-			$table .= '</tr><br /><tr>';
+			$table .= '</tr><tr>';
 
 			$i = 0;
 			while ( $i != $fir_weekday) { //１日の曜日まで空白（&nbsp;）で埋める
-				$table .= '<td>&nbsp;</td><br />';
+				$table .= '<td>&nbsp;</td>';
 				$i++;
 			}
 
@@ -159,7 +175,12 @@
 			//-------------スタイルシート設定終わり-----------------------------
 			 
 			    // 日付セル作成とスタイルシートの挿入
-			    $table .=  "<td style=\"color:" . $style . ";\">" . $day . "</td>";
+			    if ($path_arr[$day]) {	// イベント設定日なら画像を表示
+				    $table .=  '<td style="color:' . $style . ';"><img src="' . $path_arr[$day] . '" width="50" height="50">' . $day . '</td>';				
+				}
+				else {	// 文字のみ表示
+				    $table .=  '<td style="color:' . $style . ';">' . $day . '</td>';
+				}
 			 
 			    $i++; //カウント値（曜日カウンター）+1
 			}
