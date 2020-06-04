@@ -4,11 +4,11 @@
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <?php
-  echo '<title>Myとびだせ　どうぶつの森　イベントカレンダー</title>';
+  echo '<title>Myとびだせ　どうぶつの森　イベントカレンダーの追加と削除</title>';
 ?>
   <link rel="stylesheet" type="text/css" href="style.css" />
 </head>
 <body>
 <?php
-  echo '<h3>Myとびだせ　どうぶつの森　イベントカレンダー</h3>';
+  echo '<h3>Myとびだせ　どうぶつの森　イベントカレンダーの追加と削除</h3>';
 ?>

@@ -190,18 +190,29 @@
 
 	?>
 			<hr>
-				<p>追加する情報を選択して追加をクリックするか、削除をクリックしてください</p>
-				<form method="post" action="<?php echo $_SERVER['PHP_SELF']; ?>">
-					<input type="date" id="date" name="date" /><br />
-					<label for="event">イベント：</label>
-					<select name="event" />
-					<?php echo $event_list; ?>
-					</select><br />
-					<input type="submit" value="追加" name="submit" />
-					<input type="submit" value="削除" name="delete" /><br />
-				</form>
-
-<hr>
+			<p>テーブル内の日付をクリックすると年月日を設定できます</p>
+			<form id="id_form1" method="post" action="<?php echo $_SERVER['PHP_SELF']; ?>">
+				<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+				<script type="text/javascript">
+					$(function() {
+						$("td").click(function() {
+							// 現在の年月日をyy-mm-dd形式にしてdateに設定する
+							var nowyear = <?php echo json_encode($now_year); ?>;
+							var nowmonth = <?php echo json_encode(sprintf("%02d", $now_month)); ?>;
+							var nowday = ('0' + $(this).text()).slice(-2);
+							var clickdate =  nowyear + '-' + nowmonth + '-' + nowday;
+							document.forms.id_form1.date.value = clickdate;
+					     });
+					}); 
+				</script>
+				<input type="date" id="date" name="date" /><br />
+				<label for="event">イベント：</label>
+				<select name="event" />
+				<?php echo $event_list; ?>
+				</select><br />
+				<input type="submit" value="追加" name="submit" />
+				<input type="submit" value="削除" name="delete" /><br />
+			</form>
 <?php
 		}
 	}
