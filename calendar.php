@@ -182,11 +182,11 @@
 			 
 			    // 日付セル作成とスタイルシートの挿入
 			    if ($path_arr[$day]) {	// イベント設定日なら画像を表示
-					$table .=  '<td style="color:' . $style . ';">';
+					$table .=  '<div class="pic_frame"><td style="color:' . $style . ';">';
 			    	foreach($path_arr[$day] as $path) {
 			    		$table .=  '<img src="' . $path . '" width="50" height="50">';
 					}
-					$table .= $day . '</td>';
+					$table .= '<br />' . $day . '</td></div>';
 				}
 				else {	// 文字のみ表示
 				    $table .=  '<td style="color:' . $style . ';">' . $day . '</td>';
