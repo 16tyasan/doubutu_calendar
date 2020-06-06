@@ -45,16 +45,16 @@
 				$now_month = 12;			
 			}
 			
-			if ( ($now_year === date("Y")) && ($now_month === date("n")) ) {	// 今年の今月の場合
+			if ( ($now_year === date("Y")) && ($now_month === date("m")) ) {	// 今年の今月の場合
 				$now_day = date("j"); // 現在の日を取得	
 			}
 			else {
-				$now_day = 0; // 次が違うので現在の日を使わない	
+				$now_day = 0; // 年月が違うので現在の日を使わない	
 			}
 		}
 		else {
 			$now_year = date("Y"); //現在の年を取得
-			$now_month = date("n"); //現在の月を取得
+			$now_month = date("m"); //現在の月を取得
 			$now_day = date("j"); // 現在の日を取得
 		}
 		
@@ -94,7 +94,7 @@
 		// 追加や削除以外の場合のみカレンダーを表示する
 		if ($is_display_calendar) {
 			// calendar_tableから現在の年月の情報のみを取得する
-			$now_year_month = $now_year . '-' . date("m") . '%';
+			$now_year_month = $now_year . '-' . sprintf("%02d", $now_month) . '%';
 			$query = "SELECT * FROM calendar_table WHERE date LIKE '$now_year_month' AND user_id = $user_id";
 			$calendar_data = mysqli_query($dbc, $query)
 				or die('内部エラー：calendar_tableのDELETEに失敗しました。');
@@ -104,8 +104,14 @@
 				// 日付を数値で取り出す
 				$event_day = intval(substr($data['date'], -2));
 				// event_idを取り出し、画像へのパスを取得する
-				// 日付をキーとした画像へのパスを格納した配列を作成する
-				$path_arr[$event_day] = $event_img_path[$data['event_id']];
+				// 日付をキーとした画像へのパスを格納した2次元配列を作成する
+				if (isset($path_arr[$event_day])) {	// すでに登録済みの場合、添え字1以降に追加する
+					$path_arr[$event_day][count($path_arr[$event_day])] = $event_img_path[$data['event_id']];
+				}
+				else {	// 未登録の場合、添え字0に追加する
+					$path_arr[$event_day][0] = $event_img_path[$data['event_id']];
+				}
+
 				$i++;
 			}
 
@@ -176,7 +182,11 @@
 			 
 			    // 日付セル作成とスタイルシートの挿入
 			    if ($path_arr[$day]) {	// イベント設定日なら画像を表示
-				    $table .=  '<td style="color:' . $style . ';"><img src="' . $path_arr[$day] . '" width="50" height="50">' . $day . '</td>';				
+					$table .=  '<td style="color:' . $style . ';">';
+			    	foreach($path_arr[$day] as $path) {
+			    		$table .=  '<img src="' . $path . '" width="50" height="50">';
+					}
+					$table .= $day . '</td>';
 				}
 				else {	// 文字のみ表示
 				    $table .=  '<td style="color:' . $style . ';">' . $day . '</td>';
